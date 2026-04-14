@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <title>Diretoria</title>
+</head>
+<body>
+    <h1>Diretoria</h1>
+
+    <div>
+        <h2>Adicionar Admin</h2>
+
+        <form method="POST" action="{% url 'tornar_admin' %}">
+            {% csrf_token %}
+
+            <select name="user_id">
+                {% for usuario in usuarios %}
+                    <option value="{{ usuario.id }}">{{ usuario.username }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" name="acao" value="tornar">
+                Tornar Admin
+            </button>
+        </form>
+
+        <h2>Remover Admin</h2>
+
+        <form method="POST" action="{% url 'tornar_admin' %}">
+            {% csrf_token %}
+
+            <select name="user_id">
+                {% for usuariof in usuariosf %}
+                    <option value="{{ usuariof.id }}">{{ usuariof.username }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" name="acao" value="remover">
+                Remover Admin
+            </button>
+        </form>
+    </div>
+<!--Adicionar Produto-->
+<h2>Adicionar Produto</h2>
+<form id="form_produto">
+    {% csrf_token %}
+
+    <label>Nome:</label>
+    <input type="text" id="nome" required>
+
+    <label>Valor:</label>
+    <input type="number" step="0.01" id="valor" required>
+
+    <label>Estoque:</label>
+    <input type="number" id="estoque" required>
+
+    <button type="button" onclick="adicionar_produto()">Adicionar Produto</button>
+</form>
+
+<p id="mensagem_produto"></p>
+
+<script>
+    function adicionar_produto() {
+        fetch("{% url 'adicionar_produto' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nome: document.getElementById('nome').value,
+                valor: document.getElementById('valor').value,
+                estoque: document.getElementById('estoque').value,
+            })
+        })
+        .then(res => res.json())
+        .then(dados => {
+            if (dados.sucesso) {
+                document.getElementById('mensagem_produto').innerText = 'Produto adicionado!'
+                document.getElementById('form_produto').reset()
+            }
+        })
+    }
+</script>
+<!--Gerar Gráfico-->
+
+<h2>Gerar Gráficos</h2>
+<form id="form_grafico">
+    {% csrf_token %}
+    <div><label>Dados a partir de:</label>
+    <input type="date" name="data_inicio">
+    <label>Até:</label>
+    <input type="date" name="data_fim"></div>
+
+    <div>
+    <label>Tipo de Gráfico: </label>
+    <select name="graphtype" id="graphtype" onchange="trocar_campos()">
+        <option value="bar">Barras</option>
+        <option value="pie">Pizza</option>
+    </select></div>
+
+    <div id="campos_bar">
+        <label>Eixo X: </label>
+        <select name="eixo_x">
+            <option value="id_v">Vendedor</option>
+            <option value="id_p">Produto</option>
+        </select>
+        <label>Eixo Y: </label>
+        <select name="eixo_y">
+            <option value="fat">Faturamento</option>
+            <option value="qtd">Quantidade</option>
+        </select>
+    </div>
+
+    <div id="campos_pie" style="display:none;">
+        <label>Nomes: </label>
+        <select name="names">
+            <option value="vendedor">Vendedor</option>
+            <option value="produto">Produto</option>
+        </select>
+        <label>Valores: </label>
+        <select name="values">
+            <option value="fat">Faturamento</option>
+            <option value="qtd">Quantidade</option>
+        </select>
+    </div>
+
+    <button type="button" onclick="gerar_grafico()">Gerar Gráfico</button>
+</form>
+
+<div id="container_grafico"></div>
+
+<script>
+    document.getElementById('graphtype').addEventListener('change', function() {
+        if (this.value === 'bar') {
+            document.getElementById('campos_bar').style.display = 'block'
+            document.getElementById('campos_pie').style.display = 'none'
+        } else {
+            document.getElementById('campos_bar').style.display = 'none'
+            document.getElementById('campos_pie').style.display = 'block'
+        }
+    })
+
+
+    function gerar_grafico() {
+        const form = document.getElementById('form_grafico')
+        const formData = new FormData(form)
+
+        fetch("{% url 'make_graph' %}", {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}'},
+        body: formData
+        })
+        .then(res => res.json())
+        .then(dados => {
+    const container = document.getElementById('container_grafico')
+    container.innerHTML = dados.fig
+
+    // Reexecuta os scripts do Plotly
+    container.querySelectorAll('script').forEach(script => {
+        const novoScript = document.createElement('script')
+        novoScript.textContent = script.textContent
+        document.body.appendChild(novoScript)
+    })
+})}
+</script>
