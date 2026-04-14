@@ -12,6 +12,7 @@ urlpatterns=[
     path('realizar-venda/', views.realizar_venda, name='realizar_venda'),
     path('make-graph/', views.makegraph, name='make_graph'),
     path('adicionar-produto/', views.adicionar_produto, name='adicionar_produto'),
-    path('editar-venda/', views.editar_venda, name='editar_venda')
+    path('editar-venda/', views.editar_venda, name='editar_venda'),
+    path('logout/', views.logout_view, name='logout'),
 
 ]

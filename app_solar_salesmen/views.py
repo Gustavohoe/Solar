@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from django.contrib.auth import login as login_django
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -26,8 +26,7 @@ def login(request):
             if user.groups.filter(name='admin').exists():
                 return redirect('diretoria')  
             else:
-                return redirect('paginaInicial')  
-            return redirect('')
+                return redirect('paginaInicial') 
         else:
             messages.error(request, 'Username ou senha invalidos')
             return render(request, 'login.html')
@@ -58,8 +57,8 @@ def is_admin(user):
 
 @user_passes_test(is_admin, login_url='paginaInicial')
 def diretoria(request):
-    usuarios = User.objects.exclude(groups__name='admin')
-    usuariosf = User.objects.filter(groups__name='admin')
+    usuarios = User.objects.filter(is_staff=False).exclude(id=request.user.id)
+    usuariosf = User.objects.filter(is_staff=True).exclude(id=request.user.id)
     return render(request, 'diretoria.html', {
         'usuarios': usuarios,
         'usuariosf': usuariosf
@@ -78,21 +77,13 @@ def tornar_admin(request):
             user.groups.remove(grupo)
         return redirect('diretoria')
      
+@login_required     
 def paginaInicial(request):
     produtos = Produto.objects.all()
     vendas = Venda.objects.filter(vendedor=request.user)
     return render(request, 'vendedor.html', {
         'Produtos': produtos,  # tem que ser exatamente 'Produtos' para bater com o template
         'vendas': vendas
-    })
-
-def diretoria(request):
-    from django.contrib.auth.models import User
-    usuarios = User.objects.filter(is_staff=False)
-    usuariosf = User.objects.filter(is_staff=True)
-    return render(request, 'diretoria.html', {
-        'usuarios': usuarios,
-        'usuariosf': usuariosf
     })
 
 def makegraph(request):
@@ -145,17 +136,6 @@ def realizar_venda(request):
     vendas = Venda.objects.filter(vendedor=request.user)
     return render(request, 'vendedor.html', {'Produtos': produtos, 'vendas': vendas})
 
-@login_required
-def editar_venda(request, venda_id):
-    venda = get_object_or_404(Venda, id=venda_id)
-    if venda.vendedor != request.user:
-        return redirect('paginaInicial')
-    if request.method == "POST":
-        quantidade = int(request.POST.get("quantidade"))
-        venda.quantidade = quantidade
-        venda.save()
-        return redirect('paginaInicial')
-    return render(request, "editar_venda.html", {"venda": venda})
 
 @login_required
 def listar_vendas(request):
@@ -180,19 +160,26 @@ def adicionar_produto(request):
 def editar_venda(request):
     if request.method == "POST":
         venda_id = request.POST.get("venda_id")
-        nova_qtd = int(request.POST.get("qtd"))
+        nova_qtd = request.POST.get("qtd")
+
+        if not venda_id or not nova_qtd:
+            return JsonResponse({'mensagem': 'Dados inválidos'})
 
         venda = get_object_or_404(Venda, id=venda_id)
 
-        # segurança
         if venda.vendedor != request.user:
             return JsonResponse({'mensagem': 'Sem permissão'})
 
-        # atualiza
+        nova_qtd = int(nova_qtd)
+
         venda.qtd = nova_qtd
         venda.fat = venda.produto.valor * nova_qtd
         venda.save()
-
-        return JsonResponse({'mensagem': 'Venda atualizada!'})
+        
+        return JsonResponse({'mensagem': 'Venda atualizada com sucesso!'})
 
     return JsonResponse({'mensagem': 'Erro'})
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')

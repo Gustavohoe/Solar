@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="secao">
+    <h2>Perguntas Frequentes</h2>
+
+    <details class="faq-item">
+        <summary>Como cadastrar um produto?</summary>
+        <p>Preencha o formulário de produtos e clique em "Adicionar Produto".</p>
+    </details>
+
+    <details class="faq-item">
+        <summary>O que acontece se o estoque chegar a zero?</summary>
+        <p>O sistema não permitirá novas vendas até que o estoque seja atualizado.</p>
+    </details>
+
+    <details class="faq-item">
+        <summary>Como registrar uma venda?</summary>
+        <p>Selecione o produto, informe a quantidade e clique em "Enviar".</p>
+    </details>
+
+    <details class="faq-item">
+        <summary>Posso editar uma venda?</summary>
+        <p>Sim, altere a quantidade na tabela e clique em "Salvar".</p>
+    </details>
+
+    <details class="faq-item">
+        <summary>Como gerar um gráfico?</summary>
+        <p>Escolha o tipo de gráfico e clique em "Gerar Gráfico".</p>
+    </details>
+
+    <details class="faq-item">
+        <summary>Como tornar um usuário administrador?</summary>
+        <p>Selecione o usuário e clique em "Tornar Admin".</p>
+    </details>
+</div>
+{% endblock %}
