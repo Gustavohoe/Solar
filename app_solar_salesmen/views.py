@@ -58,7 +58,7 @@ def is_admin(user):
 @user_passes_test(is_admin, login_url='paginaInicial')
 def diretoria(request):
     usuarios = User.objects.filter(is_staff=False).exclude(id=request.user.id)
-    usuariosf = User.objects.filter(is_staff=True).exclude(id=request.user.id)
+    usuariosf = User.objects.filter(groups__name='admin')
     return render(request, 'diretoria.html', {
         'usuarios': usuarios,
         'usuariosf': usuariosf
@@ -120,12 +120,17 @@ def realizar_venda(request):
         produto_id = request.POST.get("selection")
         quantidade = int(request.POST.get("qtd"))
         produto = get_object_or_404(Produto, id=produto_id)
+        custom_valor = request.POST.get("custom_valor")
+        if custom_valor:
+            valor_final = float(custom_valor)
+        else:
+            valor_final = produto.valor
         if produto.estoque >= quantidade:
             Venda.objects.create(
                 produto=produto,
                 vendedor=request.user,
                 qtd=quantidade,
-                fat=produto.valor*quantidade
+                fat=(produto.valor*quantidade)+valor_final
             )
             produto.estoque -= quantidade
             produto.save()
@@ -177,6 +182,24 @@ def editar_venda(request):
         venda.save()
         
         return JsonResponse({'mensagem': 'Venda atualizada com sucesso!'})
+
+    return JsonResponse({'mensagem': 'Erro'})
+@login_required
+def apagar_venda(request):
+    if request.method == "POST":
+        venda_id = request.POST.get("venda_id")
+
+        if not venda_id:
+            return JsonResponse({'mensagem': 'ID inválido'})
+
+        venda = get_object_or_404(Venda, id=venda_id)
+
+        if venda.vendedor != request.user:
+            return JsonResponse({'mensagem': 'Sem permissão'})
+
+        venda.delete()
+
+        return JsonResponse({'mensagem': 'Venda apagada com sucesso!'})
 
     return JsonResponse({'mensagem': 'Erro'})
 

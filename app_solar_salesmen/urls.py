@@ -13,6 +13,7 @@ urlpatterns=[
     path('make-graph/', views.makegraph, name='make_graph'),
     path('adicionar-produto/', views.adicionar_produto, name='adicionar_produto'),
     path('editar-venda/', views.editar_venda, name='editar_venda'),
+    path('apagar-venda/', views.apagar_venda, name='apagar_venda'),
     path('logout/', views.logout_view, name='logout'),
 
 ]
